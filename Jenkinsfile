@@ -1,50 +1,39 @@
 pipeline {
     agent any
 
-    triggers {
-        pollSCM('*/5 * * * 1-5')
-    }
-    options {
-        skipDefaultCheckout(true)
-        // Keep the 10 most recent builds
-        buildDiscarder(logRotator(numToKeepStr: '10'))
-        timestamps()
-    }
-    environment {
-      PATH="/var/lib/jenkins/miniconda3/bin:$PATH"
-    }
-
     stages {
-
-        stage ("Code pull"){
-            steps{
-                checkout scm
+        stage('Build') {
+            steps {
+                echo 'Building'
             }
         }
-        stage('Build environment') {
+        stage('Test') {
             steps {
-                sh '''conda create --yes -n ${BUILD_TAG} python
-                      source activate ${BUILD_TAG} 
-                      pip install -r requirements.txt
-                    '''
+                echo 'Testing'
             }
         }
-        stage('Test environment') {
+        stage('Deploy') {
             steps {
-                sh '''source activate ${BUILD_TAG} 
-                      pip list
-                      which pip
-                      which python
-                    '''
+                echo 'Deploying'
             }
         }
     }
     post {
         always {
-            sh 'conda remove --yes -n ${BUILD_TAG} --all'
+            echo 'This will always run'
         }
-        filure {
-            echo "Send e-mail, when failed"
+        success {
+            echo 'This will run only if successful'
+        }
+        failure {
+            echo 'This will run only if failed'
+        }
+        unstable {
+            echo 'This will run only if the run was marked as unstable'
+        }
+        changed {
+            echo 'This will run only if the state of the Pipeline has changed'
+            echo 'For example, if the Pipeline was previously failing but is now successful'
         }
     }
 }
